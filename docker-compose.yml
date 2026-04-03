@@ -1,0 +1,55 @@
+services:
+  # El "Cerebro" (Laravel + PHP 8.3)
+  # El "Cerebro" (Laravel + PHP 8.3)
+  axon-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: axon-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./src:/var/www/  # <--- CAMBIA ESTO (Antes era ./:/var/www/)
+    networks:
+      - axon-network
+
+  # El "Servidor Web" (Nginx)
+  axon-webserver:
+    image: nginx:alpine
+    container_name: axon-webserver
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/var/www/
+      - ./docker-config/nginx:/etc/nginx/conf.d/
+    networks:
+      - axon-network
+
+  # El "Corazón" (MySQL 8.0)
+  axon-db:
+    image: mysql:8.0
+    container_name: axon-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: axon_database
+      MYSQL_ROOT_PASSWORD: root_password_axon
+    volumes:
+      - axon-db-data:/var/lib/mysql
+    networks:
+      - axon-network
+
+  # El "Acelerador" (Redis)
+  axon-redis:
+    image: redis:alpine
+    container_name: axon-redis
+    restart: unless-stopped
+    networks:
+      - axon-network
+
+networks:
+  axon-network:
+    driver: bridge
+
+volumes:
+  axon-db-data:
